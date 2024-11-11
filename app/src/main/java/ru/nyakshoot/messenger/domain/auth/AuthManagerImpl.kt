@@ -2,7 +2,6 @@ package ru.nyakshoot.messenger.domain.auth
 
 import kotlinx.coroutines.flow.Flow
 import ru.nyakshoot.messenger.data.auth.AuthRepository
-import ru.nyakshoot.messenger.domain.auth.AuthManager
 import ru.nyakshoot.messenger.utils.NetworkResult
 import javax.inject.Inject
 

@@ -1,12 +1,8 @@
 package ru.nyakshoot.messenger.data.chat.remote
 
 import android.util.Log
-import androidx.compose.ui.util.fastForEach
-import androidx.compose.ui.util.fastForEachIndexed
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.SetOptions
-import com.google.firebase.firestore.toObject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -58,23 +54,11 @@ class MessageRemoteDataSourceImpl @Inject constructor(
         chatRef.get().addOnSuccessListener { chat ->
             val messages = chat.get("messages") as? List<Map<String, Any>> ?: emptyList()
 
-            Log.d("messages", messages.toString())
-
             val messageToDelete = messages.find { it["id"] == messageId }
 
             if (messageToDelete != null) {
                 chatRef.update("messages", FieldValue.arrayRemove(messageToDelete))
-                    .addOnSuccessListener {
-                        Log.d("Firestore", "Message deleted successfully")
-                    }
-                    .addOnFailureListener { e ->
-                        Log.e("Firestore", "Error deleting message", e)
-                    }
-            } else {
-                Log.d("Firestore", "Message not found")
             }
-        }.addOnFailureListener { e ->
-            Log.e("Firestore", "Error fetching chat", e)
         }
     }
 
@@ -86,18 +70,15 @@ class MessageRemoteDataSourceImpl @Inject constructor(
                 val chatWithMessages = snapshot.toObject(ChatWithMessages::class.java)
                 val lastMessage = chatWithMessages?.messages?.lastOrNull()
 
-                // Обновляем поле last_message.is_read, если последнее сообщение от указанного senderId
                 if (lastMessage?.senderId == senderId) {
                     chatRef.update("last_message.is_read", true)
                 }
 
-                // Получаем список сообщений и обновляем isRead для сообщений от senderId
                 val messages = chatWithMessages?.messages ?: emptyList()
                 val updatedMessages = messages.map { message ->
                     if (message.senderId == senderId && !message.isRead) {
                         message.isRead = true
                     }
-                    // Преобразуем каждое сообщение в HashMap
                     hashMapOf(
                         "id" to message.id,
                         "text" to message.text,
@@ -107,7 +88,6 @@ class MessageRemoteDataSourceImpl @Inject constructor(
                     )
                 }
 
-                // Сохраняем обновленный список сообщений в Firestore
                 chatRef.update("messages", updatedMessages)
             }
     }

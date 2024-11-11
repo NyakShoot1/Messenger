@@ -2,24 +2,11 @@ package ru.nyakshoot.messenger.data.chat.local
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
-import androidx.room.ForeignKey
-import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.google.firebase.Timestamp
-import ru.nyakshoot.messenger.data.chats.local.chats.ChatEntity
 import ru.nyakshoot.messenger.domain.chat.Message
 
-@Entity(tableName = "message",
-//    foreignKeys = [ForeignKey(
-//        entity = ChatEntity::class,
-//        parentColumns = ["chat_id"],
-//        childColumns = ["chat_id"],
-//        onDelete = ForeignKey.NO_ACTION
-//    )],
-//    indices = [
-//        Index("chat_id")
-//    ]
-)
+@Entity(tableName = "message")
 data class MessageEntity(
 
     @PrimaryKey

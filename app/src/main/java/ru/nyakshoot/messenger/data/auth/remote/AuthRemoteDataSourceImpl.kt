@@ -1,6 +1,5 @@
 package ru.nyakshoot.messenger.data.auth.remote
 
-import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthException
 import com.google.firebase.firestore.FirebaseFirestore

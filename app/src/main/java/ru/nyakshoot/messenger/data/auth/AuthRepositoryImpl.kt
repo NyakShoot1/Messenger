@@ -1,11 +1,6 @@
 package ru.nyakshoot.messenger.data.auth
 
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.launch
-import ru.nyakshoot.messenger.data.auth.AuthRepository
 import ru.nyakshoot.messenger.data.auth.local.AuthLocalDataSource
 import ru.nyakshoot.messenger.data.auth.local.logOut
 import ru.nyakshoot.messenger.data.auth.remote.AuthRemoteDataSource

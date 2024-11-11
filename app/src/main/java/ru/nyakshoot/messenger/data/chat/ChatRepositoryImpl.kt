@@ -8,7 +8,6 @@ import kotlinx.coroutines.launch
 import ru.nyakshoot.messenger.data.auth.AuthRepository
 import ru.nyakshoot.messenger.data.chat.local.MessageLocalDataSource
 import ru.nyakshoot.messenger.data.chat.remote.MessageRemoteDataSource
-import ru.nyakshoot.messenger.data.chats.local.chats.ChatsLocalDataSource
 import ru.nyakshoot.messenger.domain.chat.Message
 import java.util.UUID
 import javax.inject.Inject
@@ -20,8 +19,6 @@ class ChatRepositoryImpl @Inject constructor(
 ): ChatRepository {
 
     private val currentAuthUser = authRepository.currentAuthUser
-
-    private var currentChatId: String = ""
 
     override val currentMessages: List<Message>? = null
 
