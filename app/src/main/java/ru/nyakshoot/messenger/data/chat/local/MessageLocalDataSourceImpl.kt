@@ -22,8 +22,8 @@ class MessageLocalDataSourceImpl @Inject constructor(
         chatsDao.updateChatLastMessageId(chatId, message.id)
     }
 
-    override suspend fun deleteAll(chatId: String) {
-        messageDao.deleteMessage(chatId)
+    override suspend fun deleteAllFromChat(chatId: String) {
+        messageDao.deleteAllFromChat(chatId)
     }
 
     override suspend fun readMessages(chatId: String, senderId: String) {
@@ -32,5 +32,9 @@ class MessageLocalDataSourceImpl @Inject constructor(
 
     override suspend fun deleteMessage(messageId: String) {
         messageDao.deleteMessage(messageId)
+    }
+
+    override suspend fun logOut() {
+        messageDao.deleteAll()
     }
 }

@@ -10,4 +10,6 @@ interface UserLocalDataSource {
 
     suspend fun insert(user: User)
 
+    suspend fun logOut()
+
 }

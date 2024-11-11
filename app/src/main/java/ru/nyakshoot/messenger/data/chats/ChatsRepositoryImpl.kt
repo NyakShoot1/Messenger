@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.launch
 import ru.nyakshoot.messenger.data.auth.AuthRepository
+import ru.nyakshoot.messenger.data.chat.local.MessageLocalDataSource
 import ru.nyakshoot.messenger.data.chats.local.chats.ChatsLocalDataSource
 import ru.nyakshoot.messenger.data.chats.local.user.UserLocalDataSource
 import ru.nyakshoot.messenger.data.chats.remote.chats.ChatsRemoteDataSource
@@ -23,6 +24,7 @@ class ChatsRepositoryImpl @Inject constructor(
     private val chatsRemoteDataSource: ChatsRemoteDataSource,
     private val userLocalDataSource: UserLocalDataSource,
     private val userRemoteDataSource: UserRemoteDataSource,
+    private val messageLocalDataSource: MessageLocalDataSource,
     private val authRepository: AuthRepository
 ) : ChatsRepository {
 
@@ -81,6 +83,8 @@ class ChatsRepositoryImpl @Inject constructor(
 
     override suspend fun logOut() {
         chatsLocalDataSource.logOut()
+        userLocalDataSource.logOut()
+        messageLocalDataSource.logOut()
     }
 
 

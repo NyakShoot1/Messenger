@@ -10,10 +10,12 @@ interface MessageLocalDataSource {
 
     suspend fun insert(chatId: String, message: Message)
 
-    suspend fun deleteAll(chatId: String)
+    suspend fun deleteAllFromChat(chatId: String)
 
     suspend fun readMessages(chatId: String, senderId: String)
 
     suspend fun deleteMessage(messageId: String)
+
+    suspend fun logOut()
 
 }

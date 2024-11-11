@@ -18,4 +18,8 @@ class UserLocalDataSourceImpl @Inject constructor(
     override suspend fun insert(user: User) {
         userDao.insert(user.toEntity())
     }
+
+    override suspend fun logOut() {
+        userDao.deleteAll()
+    }
 }

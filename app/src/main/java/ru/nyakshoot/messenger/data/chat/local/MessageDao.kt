@@ -5,8 +5,6 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
-import ru.nyakshoot.messenger.data.chats.local.chats.ChatEntity
-import ru.nyakshoot.messenger.domain.chat.Message
 
 @Dao
 interface MessageDao {
@@ -27,10 +25,14 @@ interface MessageDao {
 
     @Transaction
     @Query("DELETE FROM message WHERE chat_id = :chatId")
-    suspend fun deleteAll(chatId: String)
+    suspend fun deleteAllFromChat(chatId: String)
 
     @Transaction
     @Query("UPDATE message SET is_read = 1 WHERE chat_id = :chatId AND sender_id = :senderId")
     suspend fun readMessages(chatId: String, senderId: String)
+
+    @Transaction
+    @Query("DELETE FROM message")
+    suspend fun deleteAll()
 
 }

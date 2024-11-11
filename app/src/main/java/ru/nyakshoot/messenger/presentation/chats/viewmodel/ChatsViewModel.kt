@@ -71,4 +71,9 @@ class ChatsViewModel @Inject constructor(
         }
     }
 
+    fun logOut() = viewModelScope.launch {
+        authManager.logOut()
+        chatsRepository.logOut()
+    }
+
 }
