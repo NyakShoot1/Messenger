@@ -32,8 +32,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.screen.Screen
+import cafe.adriel.voyager.core.screen.ScreenKey
+import cafe.adriel.voyager.core.screen.uniqueScreenKey
 import cafe.adriel.voyager.hilt.getScreenModel
-import cafe.adriel.voyager.hilt.getViewModel
+import ru.nyakshoot.messenger.domain.chats.Chat
 import ru.nyakshoot.messenger.presentation.chat.view.composables.DateDivider
 import ru.nyakshoot.messenger.presentation.chat.view.composables.MessageCard
 import ru.nyakshoot.messenger.presentation.chat.viewmodel.ChatState
@@ -41,13 +43,15 @@ import ru.nyakshoot.messenger.presentation.chat.viewmodel.ChatScreenModel
 import ru.nyakshoot.messenger.utils.formatMessageDate
 
 class ChatScreen(
-    val chatId: String
+    val chat: Chat,
 ) : Screen {
+    override val key: ScreenKey = uniqueScreenKey
+
     @Composable
     override fun Content() {
 
         val screenModel = getScreenModel<ChatScreenModel, ChatScreenModel.Factory> { factory ->
-            factory.create(chatId)
+            factory.create(chat)
         }
 
         val messages by screenModel.messagesFlow.collectAsState()
@@ -62,6 +66,7 @@ class ChatScreen(
             if (!messages.isNullOrEmpty()) {
                 listState.animateScrollToItem(messages!!.size - 1)
             }
+            screenModel.readMessages()
         }
 
         Box(
@@ -121,7 +126,6 @@ class ChatScreen(
                     .padding(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Поле ввода текста
                 BasicTextField(
                     value = text,
                     onValueChange = { text = it },
@@ -133,7 +137,6 @@ class ChatScreen(
                     textStyle = LocalTextStyle.current.copy(fontSize = 16.sp)
                 )
 
-                // Кнопка отправки
                 IconButton(
                     onClick = {
                         if (text.isNotEmpty()) {

@@ -51,9 +51,10 @@ class ChatsScreen : Screen {
                             items(chats!!) { chat ->
                                 ChatCard(
                                     chat.receiverUser.username,
-                                    chat.lastMessage ?: Message(text = "No messages")
+                                    chat.lastMessage ?: Message(text = "No messages"),
+                                    viewModel.currentUser!!
                                 ){
-                                    navigator.push(ChatScreen(chat.id))
+                                    navigator.push(ChatScreen(chat))
                                 }
                                 HorizontalDivider(modifier = Modifier.fillMaxWidth(0.95f))
                             }

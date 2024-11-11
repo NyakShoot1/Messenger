@@ -13,6 +13,8 @@ interface ChatRepository {
 
     suspend fun createNewMessage(text: String, chatId: String)
 
+    suspend fun readMessages(chatId: String, senderId: String)
+
     suspend fun logOut(chatId: String)
 
 }

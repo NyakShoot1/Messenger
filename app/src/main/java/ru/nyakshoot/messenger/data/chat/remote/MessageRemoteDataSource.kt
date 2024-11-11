@@ -11,6 +11,8 @@ interface MessageRemoteDataSource {
 
     suspend fun deleteMessage(chatId: String, messageId: String)
 
+    suspend fun readMessages(chatId: String, senderId: String)
+
     suspend fun newMessage(chatId: String, message: Message)
 
 }

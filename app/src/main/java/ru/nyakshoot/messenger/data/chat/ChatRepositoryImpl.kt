@@ -63,6 +63,11 @@ class ChatRepositoryImpl @Inject constructor(
         messageRemoteDataSource.newMessage(chatId, newMessage)
     }
 
+    override suspend fun readMessages(chatId: String, senderId: String) {
+        messageRemoteDataSource.readMessages(chatId, senderId)
+        messageLocalDataSource.readMessages(chatId, senderId)
+    }
+
     override suspend fun logOut(chatId: String) {
         messageLocalDataSource.deleteAll(chatId)
     }

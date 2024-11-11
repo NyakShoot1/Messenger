@@ -22,7 +22,6 @@ class ChatsRemoteDataSourceImpl @Inject constructor(
             .whereArrayContains("users", currentUserId)
             .addSnapshotListener { snapshots, error ->
                 if (error != null) {
-                    Log.w("Firestore", "Listen failed", error)
                     onUpdate(null)
                     return@addSnapshotListener
                 }
@@ -36,7 +35,6 @@ class ChatsRemoteDataSourceImpl @Inject constructor(
                         chat.receiverUser = receiverUser
                     }
 
-                    Log.d("test", updatedChats.toString())
                     onUpdate(updatedChats)
                 }
             }

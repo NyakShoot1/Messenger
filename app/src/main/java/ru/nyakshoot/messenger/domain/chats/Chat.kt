@@ -23,8 +23,6 @@ data class Chat(
     var users: List<String> = emptyList(),
 
     @PropertyName("")
-    var messages: List<Message> = emptyList(),
-
     var receiverUser: User = User()
 ) {
 

@@ -8,7 +8,6 @@ import cafe.adriel.voyager.hilt.ScreenModelFactory
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -17,18 +16,18 @@ import kotlinx.coroutines.launch
 import ru.nyakshoot.messenger.data.auth.AuthRepository
 import ru.nyakshoot.messenger.data.chat.ChatRepository
 import ru.nyakshoot.messenger.domain.chat.Message
-import javax.inject.Inject
+import ru.nyakshoot.messenger.domain.chats.Chat
 
 
 class ChatScreenModel @AssistedInject constructor(
-    @Assisted val chatId: String,
+    @Assisted val chat: Chat,
     private val chatRepository: ChatRepository,
     private val authRepository: AuthRepository
 ) : ScreenModel {
 
     @AssistedFactory
     interface Factory : ScreenModelFactory {
-        fun create(chatId: String): ChatScreenModel
+        fun create(chat: Chat): ChatScreenModel
     }
 
     private val _messagesFlow = MutableStateFlow<List<Message>?>(null)
@@ -41,17 +40,20 @@ class ChatScreenModel @AssistedInject constructor(
 
     init {
         observeMessages()
+        readMessages()
     }
 
     private fun observeMessages() {
         screenModelScope.launch {
             _chatState.value = ChatState.MessagesLoading
-            delay(1500)
-            chatRepository.observeMessages(chatId)
+            delay(1000)
+            chatRepository.observeMessages(chat.id)
                 .catch { e ->
                     e.printStackTrace()
                     _messagesFlow.value = emptyList()
                     _chatState.value = ChatState.MessagesLoaded
+                    delay(1000)
+                    observeMessages()
                 }
                 .collect { messages ->
                     _messagesFlow.value = messages
@@ -62,7 +64,13 @@ class ChatScreenModel @AssistedInject constructor(
 
     fun sendNewMessage(text: String){
         screenModelScope.launch {
-            chatRepository.createNewMessage(text, chatId)
+            chatRepository.createNewMessage(text, chat.id)
+            if (_messagesFlow.value.isNullOrEmpty())
+                observeMessages()
         }
+    }
+
+    fun readMessages() = screenModelScope.launch {
+        chatRepository.readMessages(chat.id, chat.receiverUser.id)
     }
 }

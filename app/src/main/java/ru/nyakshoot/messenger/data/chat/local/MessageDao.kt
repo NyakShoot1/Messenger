@@ -29,4 +29,8 @@ interface MessageDao {
     @Query("DELETE FROM message WHERE chat_id = :chatId")
     suspend fun deleteAll(chatId: String)
 
+    @Transaction
+    @Query("UPDATE message SET is_read = 1 WHERE chat_id = :chatId AND sender_id = :senderId")
+    suspend fun readMessages(chatId: String, senderId: String)
+
 }

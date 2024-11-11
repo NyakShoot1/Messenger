@@ -10,15 +10,15 @@ import ru.nyakshoot.messenger.data.chats.local.chats.ChatEntity
 import ru.nyakshoot.messenger.domain.chat.Message
 
 @Entity(tableName = "message",
-    foreignKeys = [ForeignKey(
-        entity = ChatEntity::class,
-        parentColumns = ["chat_id"],
-        childColumns = ["chat_id"],
-        onDelete = ForeignKey.CASCADE
-    )],
-    indices = [
-        Index("chat_id")
-    ]
+//    foreignKeys = [ForeignKey(
+//        entity = ChatEntity::class,
+//        parentColumns = ["chat_id"],
+//        childColumns = ["chat_id"],
+//        onDelete = ForeignKey.NO_ACTION
+//    )],
+//    indices = [
+//        Index("chat_id")
+//    ]
 )
 data class MessageEntity(
 

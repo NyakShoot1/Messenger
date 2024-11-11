@@ -2,15 +2,16 @@ package ru.nyakshoot.messenger.data.chats.local.chats
 
 import android.util.Log
 import kotlinx.coroutines.flow.MutableStateFlow
+import ru.nyakshoot.messenger.data.chat.local.MessageDao
 import ru.nyakshoot.messenger.domain.chats.Chat
 import javax.inject.Inject
 
 class ChatsLocalDataSourceImpl @Inject constructor(
-    private val chatsDao: ChatsDao
+    private val chatsDao: ChatsDao,
+    private val messageDao: MessageDao
 ) : ChatsLocalDataSource {
 
     override suspend fun getUserChats(): List<Chat> {
-        Log.d("test1", chatsDao.getUserChats().toString())
         return chatsDao.getUserChats().map {
             Chat(
                 it.chat.id,
@@ -22,6 +23,7 @@ class ChatsLocalDataSourceImpl @Inject constructor(
     }
 
     override suspend fun insertAllChats(chats: List<Chat>) {
+        chats.map { if (it.lastMessage != null) messageDao.insert(it.lastMessage!!.toEntity(it.id)) } // todo перенос в repository
         chatsDao.insertAll(chats.map { it.toChatEntity() })
     }
 
@@ -30,7 +32,6 @@ class ChatsLocalDataSourceImpl @Inject constructor(
     }
 
     override suspend fun insert(chat: Chat) {
-        Log.d("INSERT", chat.toChatEntity().toString())
         chatsDao.insert(chat.toChatEntity())
     }
 

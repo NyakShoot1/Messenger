@@ -12,13 +12,15 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 import ru.nyakshoot.messenger.data.chats.ChatsRepository
+import ru.nyakshoot.messenger.domain.auth.AuthManager
 import ru.nyakshoot.messenger.domain.chats.Chat
 import ru.nyakshoot.messenger.domain.chats.User
 import javax.inject.Inject
 
 @HiltViewModel
 class ChatsViewModel @Inject constructor(
-    private val chatsRepository: ChatsRepository
+    private val chatsRepository: ChatsRepository,
+    private val authManager: AuthManager
 ) : ViewModel() {
 
     private val _chatsFlow = MutableStateFlow<List<Chat>?>(null)
@@ -30,6 +32,8 @@ class ChatsViewModel @Inject constructor(
     private val _chatsState = MutableLiveData<ChatsState>()
     val chatsState: LiveData<ChatsState> get() = _chatsState
 
+    val currentUser = authManager.getCurrentAuthUser()
+
     init {
         observeChats()
     }
@@ -37,7 +41,7 @@ class ChatsViewModel @Inject constructor(
     private fun observeChats() {
         viewModelScope.launch {
             _chatsState.value = ChatsState.ChatsLoading
-            delay(1500)
+            delay(1000)
             chatsRepository.observeChats()
                 .catch { e ->
                     e.printStackTrace()

@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "cd31b1a4ceebdaed5489a056e157c507",
+    "identityHash": "0ca7297ef413fd063801772214e7e0e9",
     "entities": [
       {
         "tableName": "chat",
@@ -86,7 +86,7 @@
       },
       {
         "tableName": "message",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`message_id` TEXT NOT NULL, `sender_id` TEXT NOT NULL, `is_read` INTEGER NOT NULL, `message_ts` TEXT NOT NULL, `text` TEXT NOT NULL, `chat_id` TEXT NOT NULL, PRIMARY KEY(`message_id`), FOREIGN KEY(`chat_id`) REFERENCES `chat`(`chat_id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`message_id` TEXT NOT NULL, `sender_id` TEXT NOT NULL, `is_read` INTEGER NOT NULL, `message_ts` TEXT NOT NULL, `text` TEXT NOT NULL, `chat_id` TEXT NOT NULL, PRIMARY KEY(`message_id`))",
         "fields": [
           {
             "fieldPath": "id",
@@ -131,30 +131,8 @@
             "message_id"
           ]
         },
-        "indices": [
-          {
-            "name": "index_message_chat_id",
-            "unique": false,
-            "columnNames": [
-              "chat_id"
-            ],
-            "orders": [],
-            "createSql": "CREATE INDEX IF NOT EXISTS `index_message_chat_id` ON `${TABLE_NAME}` (`chat_id`)"
-          }
-        ],
-        "foreignKeys": [
-          {
-            "table": "chat",
-            "onDelete": "CASCADE",
-            "onUpdate": "NO ACTION",
-            "columns": [
-              "chat_id"
-            ],
-            "referencedColumns": [
-              "chat_id"
-            ]
-          }
-        ]
+        "indices": [],
+        "foreignKeys": []
       },
       {
         "tableName": "user",
@@ -193,7 +171,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'cd31b1a4ceebdaed5489a056e157c507')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '0ca7297ef413fd063801772214e7e0e9')"
     ]
   }
 }

@@ -34,23 +34,22 @@ class ChatsRepositoryImpl @Inject constructor(
         val localChats = chatsLocalDataSource.getUserChats()
         trySend(localChats)
 
-        Log.d("Local", localChats.toString())
         val remoteChats = chatsRemoteDataSource.getUserChats(currentAuthUser?.id.orEmpty()).data
-        Log.d("Remote", remoteChats.toString())
         if (!remoteChats.isNullOrEmpty()) {
-            userLocalDataSource.insertAll(remoteChats.map { it.receiverUser })
-            chatsLocalDataSource.insertAllChats(remoteChats)
+            launch {
+                userLocalDataSource.insertAll(remoteChats.map { it.receiverUser })
+                chatsLocalDataSource.insertAllChats(remoteChats)
+            }
             trySend(remoteChats)
         }
 
         chatsRemoteDataSource.observeChats(currentAuthUser?.id.orEmpty()) { updatedChats ->
-            Log.d("Remote", updatedChats.toString())
             if (!updatedChats.isNullOrEmpty()) {
                 launch {
                     userLocalDataSource.insertAll(updatedChats.map { it.receiverUser })
                     chatsLocalDataSource.insertAllChats(updatedChats)
-                    trySend(updatedChats)
                 }
+                trySend(updatedChats)
             }
         }
 
@@ -68,7 +67,6 @@ class ChatsRepositoryImpl @Inject constructor(
     }
 
     override suspend fun createNewChat(user: User) {
-        Log.d("New user", user.toString())
         val newChat = Chat(
             id = UUID.randomUUID().toString(),
             ts = Timestamp.now(),

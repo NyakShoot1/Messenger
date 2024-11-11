@@ -14,7 +14,7 @@ class MessageLocalDataSourceImpl @Inject constructor(
 
     override suspend fun insertAll(chatId: String, messages: List<Message>) {
         messageDao.insertAll(messages.map { it.toEntity(chatId) })
-        chatsDao.updateChatLastMessageId(chatId, messages.maxByOrNull { it.ts!! }!!.id)
+        chatsDao.updateChatLastMessageId(chatId, messages.maxByOrNull { it.ts!! }!!.id) // todo перенести в repository
     }
 
     override suspend fun insert(chatId: String, message: Message) {
@@ -24,6 +24,10 @@ class MessageLocalDataSourceImpl @Inject constructor(
 
     override suspend fun deleteAll(chatId: String) {
         messageDao.deleteMessage(chatId)
+    }
+
+    override suspend fun readMessages(chatId: String, senderId: String) {
+        messageDao.readMessages(chatId, senderId)
     }
 
     override suspend fun deleteMessage(messageId: String) {

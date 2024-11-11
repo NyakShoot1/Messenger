@@ -12,6 +12,8 @@ interface MessageLocalDataSource {
 
     suspend fun deleteAll(chatId: String)
 
+    suspend fun readMessages(chatId: String, senderId: String)
+
     suspend fun deleteMessage(messageId: String)
 
 }
