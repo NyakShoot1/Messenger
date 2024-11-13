@@ -6,4 +6,6 @@ sealed class ChatState {
 
     data object MessagesLoaded: ChatState()
 
+    data object MessagesSelected: ChatState()
+
 }

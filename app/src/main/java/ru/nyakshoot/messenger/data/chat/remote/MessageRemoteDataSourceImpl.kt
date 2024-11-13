@@ -1,16 +1,18 @@
 package ru.nyakshoot.messenger.data.chat.remote
 
 import android.util.Log
+import com.google.firebase.Timestamp
+import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
-import ru.nyakshoot.messenger.domain.chat.ChatWithMessages
+import kotlinx.coroutines.withContext
+import ru.nyakshoot.messenger.data.chats.remote.chats.ChatFirestore
 import ru.nyakshoot.messenger.domain.chat.Message
-import ru.nyakshoot.messenger.utils.NetworkResult
-import ru.nyakshoot.messenger.utils.safeFirestoreCall
 import javax.inject.Inject
 
 class MessageRemoteDataSourceImpl @Inject constructor(
@@ -20,7 +22,7 @@ class MessageRemoteDataSourceImpl @Inject constructor(
     private val db get() = FirebaseFirestore.getInstance()
 
     override suspend fun observeMessages(chatId: String, onUpdate: (List<Message>?) -> Unit) {
-        db.collection("chats")
+        db.collection("messages")
             .document(chatId)
             .addSnapshotListener { snapshots, error ->
                 if (error != null) {
@@ -29,27 +31,27 @@ class MessageRemoteDataSourceImpl @Inject constructor(
                     return@addSnapshotListener
                 }
 
-                val chat = snapshots?.toObject(ChatWithMessages::class.java)
-                val updatedMessages = chat?.messages ?: emptyList()
-
-                onUpdate(updatedMessages)
+                CoroutineScope(Dispatchers.IO).launch {
+                    val updatedMessages = snapshots?.getMessagesFromDocument()
+                    onUpdate(updatedMessages)
+                }
             }
     }
 
-    override suspend fun getMessages(chatId: String): NetworkResult<List<Message>?> {
-        return safeFirestoreCall {
-            val chat = db.collection("chats")
+    override suspend fun getMessages(chatId: String): List<Message>? {
+        return withContext(Dispatchers.IO) {
+            val messagesSnapshot = db.collection("messages")
                 .document(chatId)
                 .get()
                 .await()
-                .toObject(ChatWithMessages::class.java)
-
-            chat?.messages ?: emptyList()
+            messagesSnapshot?.getMessagesFromDocument()
         }
     }
 
     override suspend fun deleteMessage(chatId: String, messageId: String) {
-        val chatRef = db.collection("chats").document(chatId)
+        // todo
+        val chatRef = db.collection("chats")
+            .document(chatId)
 
         chatRef.get().addOnSuccessListener { chat ->
             val messages = chat.get("messages") as? List<Map<String, Any>> ?: emptyList()
@@ -64,47 +66,40 @@ class MessageRemoteDataSourceImpl @Inject constructor(
 
     override suspend fun readMessages(chatId: String, senderId: String) {
         val chatRef = db.collection("chats").document(chatId)
+        val lastMessage = chatRef.get().await().toObject(ChatFirestore::class.java)?.lastMessage
 
-        chatRef.get()
+        if (lastMessage?.senderId == senderId)
+            lastMessage.isRead = true
+
+        chatRef.update("last_message", lastMessage)
+
+        val messagesRef = db.collection("messages")
+            .document(chatId)
+
+        messagesRef.get()
             .addOnSuccessListener { snapshot ->
-                val chatWithMessages = snapshot.toObject(ChatWithMessages::class.java)
-                val lastMessage = chatWithMessages?.messages?.lastOrNull()
-
-                if (lastMessage?.senderId == senderId) {
-                    chatRef.update("last_message.is_read", true)
-                }
-
-                val messages = chatWithMessages?.messages ?: emptyList()
-                val updatedMessages = messages.map { message ->
-                    if (message.senderId == senderId && !message.isRead) {
+                val messages = snapshot?.getMessagesFromDocument()
+                messages?.forEach { message ->
+                    if (message.senderId == senderId)
                         message.isRead = true
-                    }
-                    hashMapOf(
-                        "id" to message.id,
-                        "text" to message.text,
-                        "sender_id" to message.senderId,
-                        "is_read" to message.isRead,
-                        "ts" to message.ts
-                    )
+                    messagesRef.update(message.id, message)
                 }
-
-                chatRef.update("messages", updatedMessages)
             }
     }
 
 
     override suspend fun newMessage(chatId: String, message: Message) {
-        val chatRef = db.collection("chats").document(chatId)
-        chatRef.update("messages", FieldValue.arrayUnion(message))
-            .addOnSuccessListener {
-                CoroutineScope(Dispatchers.IO).launch {
-                    updateLastMessage(chatId, message)
-                }
-                Log.d("Firestore", "Message added successfully")
-            }
-            .addOnFailureListener { e ->
-                Log.e("Firestore", "Error adding message", e)
-            }
+        updateLastMessage(chatId, message)
+
+        db.collection("messages")
+            .document(chatId)
+            .set(mapOf(message.id to message), SetOptions.merge())
+            .await()
+
+    }
+
+    override suspend fun editMessage(chatId: String, message: Message) {
+        // todo
     }
 
     private suspend fun updateLastMessage(chatId: String, message: Message) {
@@ -112,5 +107,20 @@ class MessageRemoteDataSourceImpl @Inject constructor(
             .document(chatId)
             .update("last_message", message)
             .await()
+    }
+
+    private fun DocumentSnapshot.getMessagesFromDocument(): List<Message> {
+        val messages = this.data as? Map<String, Map<String, Any>> ?: emptyMap()
+
+        val listMessages: List<Message> = messages.map { (id, attributes) ->
+            Message(
+                id = id,
+                senderId = attributes[Message.SENDER_ID] as String,
+                isRead = attributes[Message.IS_READ] as Boolean,
+                ts = attributes[Message.TS] as Timestamp,
+                text = attributes[Message.TEXT] as String
+            )
+        }
+        return listMessages.sortedBy { it.ts }
     }
 }

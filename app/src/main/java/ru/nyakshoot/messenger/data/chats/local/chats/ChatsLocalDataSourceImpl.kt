@@ -1,6 +1,7 @@
 package ru.nyakshoot.messenger.data.chats.local.chats
 
 import ru.nyakshoot.messenger.data.chat.local.MessageDao
+import ru.nyakshoot.messenger.data.chats.remote.chats.ChatFirestore
 import ru.nyakshoot.messenger.domain.chats.Chat
 import javax.inject.Inject
 
@@ -15,13 +16,13 @@ class ChatsLocalDataSourceImpl @Inject constructor(
                 it.chat.id,
                 it.chat.ts,
                 it.lastMessage?.toModel(),
-                receiverUser = it.receiverUser.toModel()
+                companion = it.companion.toModel()
             )
         }
     }
 
     override suspend fun insertAllChats(chats: List<Chat>) {
-        chats.map { if (it.lastMessage != null) messageDao.insert(it.lastMessage!!.toEntity(it.id)) } // todo перенос в repository
+        chats.map { if (it.lastMessage != null) messageDao.insert(it.lastMessage.toEntity(it.id)) } // todo перенос в repository
         chatsDao.insertAll(chats.map { it.toChatEntity() })
     }
 
@@ -29,8 +30,8 @@ class ChatsLocalDataSourceImpl @Inject constructor(
         chatsDao.deleteChat(chatId)
     }
 
-    override suspend fun insert(chat: Chat) {
-        chatsDao.insert(chat.toChatEntity())
+    override suspend fun insert(chat: ChatEntity) {
+        chatsDao.insert(chat)
     }
 
     override suspend fun logOut() {

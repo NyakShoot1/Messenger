@@ -7,10 +7,10 @@ interface ChatsRemoteDataSource {
 
     suspend fun observeChats(currentUserId: String, onUpdate: (List<Chat>?) -> Unit)
 
-    suspend fun getUserChats(currentUserId: String): NetworkResult<List<Chat>>
+    suspend fun getUserChats(currentUserId: String): List<Chat>
 
     suspend fun deleteChat(chatId: String)
 
-    suspend fun createNewChat(chat: Chat)
+    suspend fun createNewChat(chat: ChatFirestore)
 
 }

@@ -1,6 +1,8 @@
 package ru.nyakshoot.messenger.presentation.chat.view.composables
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -28,10 +30,16 @@ import ru.nyakshoot.messenger.domain.chat.Message
 import java.text.SimpleDateFormat
 import java.util.Locale
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun MessageCard(message: Message, currentUserId: String) {
+fun MessageCard(
+    message: Message,
+    currentUserId: String,
+    isSelected: Boolean,
+    onLongClick: () -> Unit
+) {
     val isCurrentUser = message.senderId == currentUserId
-
+    // todo удаление
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -46,6 +54,12 @@ fun MessageCard(message: Message, currentUserId: String) {
                 )
                 .padding(12.dp)
                 .widthIn(max = 240.dp)
+                .combinedClickable(
+                    onClick = {},
+                    onLongClick = {
+                        onLongClick()
+                    }
+                )
         ) {
             Text(
                 text = message.text,
@@ -81,14 +95,4 @@ fun MessageCard(message: Message, currentUserId: String) {
             }
         }
     }
-}
-
-@Preview
-@Composable
-private fun MessageCardPreview() {
-    Column {
-        MessageCard(Message("", "1", false, Timestamp.now(), "fdfafaffsafasaasfassafafagdggdgsddgssdgsgsdsf"), "2")
-        MessageCard(Message("", "12", true, Timestamp.now(), "fdfafaffsafasaasfassafafagdggdgsddgssdgsgsdsf"), "12")
-    }
-
 }

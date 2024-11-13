@@ -15,8 +15,8 @@ data class ChatWithMessageAndUserEntity(
     val lastMessage: MessageEntity?,
 
     @Relation(
-        parentColumn = "receiver_user_id",
+        parentColumn = "companion_id",
         entityColumn = "user_id"
     )
-    val receiverUser: UserEntity
+    val companion: UserEntity
 )

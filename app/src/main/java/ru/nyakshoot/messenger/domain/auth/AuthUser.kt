@@ -4,7 +4,7 @@ import com.google.firebase.Timestamp
 import java.util.regex.Pattern
 
 data class AuthUser(
-    val id: String,
+    var id: String,
     val email: String,
     val username: String = ""
 ){

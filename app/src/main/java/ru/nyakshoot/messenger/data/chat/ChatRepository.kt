@@ -9,7 +9,7 @@ interface ChatRepository {
 
     suspend fun observeMessages(chatId: String): Flow<List<Message>?>
 
-    suspend fun deleteMessage(chatId: String, messageId: String)
+    suspend fun deleteMessage(chatId: String, messagesId: List<String>)
 
     suspend fun createNewMessage(text: String, chatId: String)
 

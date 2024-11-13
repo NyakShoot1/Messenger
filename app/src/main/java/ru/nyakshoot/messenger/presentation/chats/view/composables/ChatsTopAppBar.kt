@@ -1,16 +1,21 @@
 package ru.nyakshoot.messenger.presentation.chats.view.composables
 
+import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -24,6 +29,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -35,46 +41,107 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import cafe.adriel.voyager.core.model.rememberNavigatorScreenModel
+import cafe.adriel.voyager.core.screen.uniqueScreenKey
+import cafe.adriel.voyager.hilt.getNavigatorScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import ru.nyakshoot.messenger.R
 import ru.nyakshoot.messenger.domain.chats.User
 import ru.nyakshoot.messenger.presentation.auth.view.AuthScreen
-import ru.nyakshoot.messenger.presentation.chats.viewmodel.ChatsViewModel
+import ru.nyakshoot.messenger.presentation.chat.view.ChatScreen
+import ru.nyakshoot.messenger.presentation.chat.viewmodel.ChatScreenModel
+import ru.nyakshoot.messenger.presentation.chats.viewmodel.ChatsScreenModel
+import ru.nyakshoot.messenger.presentation.chats.viewmodel.ChatsState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ChatsTopAppBar(viewmodel: ChatsViewModel) {
+fun ChatsTopAppBar() {
+
     val navigator = LocalNavigator.currentOrThrow
+
+    val screenModel = navigator.getNavigatorScreenModel<ChatsScreenModel>()
+
     var showDialog by remember { mutableStateOf(false) }
-    val users by viewmodel.users.collectAsState()
+    val users by screenModel.users.collectAsState()
+    val chatsState by screenModel.chatsState.observeAsState()
+    val selectedChats by screenModel.selectedChats.collectAsState()
+
+    Log.d("current_selected_chats", selectedChats.toString())
 
     Column {
         TopAppBar(
             title = {
-                Text("Чаты")
+                when(chatsState){
+                    ChatsState.ChatsSelected -> { Text("Выбрано: ${selectedChats.size}") }
+                    else -> { Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(5.dp)
+                    ) {
+                        Icon(
+                            painterResource(R.drawable.baseline_message_24),
+                            contentDescription = "chats",
+                            modifier = Modifier.size(30.dp)
+                        )
+                        Text("Чаты") }
+                    }
+                }
+            },
+            navigationIcon = {
+                when (chatsState) {
+                    ChatsState.ChatsSelected -> {
+                        IconButton(
+                            onClick = {
+                                screenModel.resetSelection()
+                            }
+                        ) {
+                            Icon(
+                                Icons.Filled.Close,
+                                contentDescription = "close selection"
+                            )
+                        }
+                    }
+                    else -> {}
+                }
             },
             actions = {
-                IconButton(
-                    onClick = {
-                        showDialog = true
+                when (chatsState) {
+                    ChatsState.ChatsSelected -> {
+                        IconButton(
+                            onClick = {
+                                screenModel.deleteChats()
+                            }
+                        ) {
+                            Icon(
+                                Icons.Filled.Delete,
+                                contentDescription = "delete chat"
+                            )
+                        }
                     }
-                ) {
-                    Icon(
-                        Icons.Default.Add,
-                        contentDescription = "Add chat"
-                    )
-                }
-                IconButton(
-                    onClick = {
-                        navigator.replaceAll(AuthScreen())
-                        viewmodel.logOut()
+
+                    else -> {
+                        IconButton(
+                            onClick = {
+                                showDialog = true
+                            }
+                        ) {
+                            Icon(
+                                Icons.Default.Add,
+                                contentDescription = "Add chat"
+                            )
+                        }
+                        IconButton(
+                            onClick = {
+                                navigator.replaceAll(AuthScreen())
+                                screenModel.logOut()
+                            }
+                        ) {
+                            Icon(
+                                painterResource(R.drawable.baseline_logout_24),
+                                contentDescription = "Exit app"
+                            )
+                        }
                     }
-                ) {
-                    Icon(
-                        painterResource(R.drawable.baseline_logout_24),
-                        contentDescription = "Exit app"
-                    )
                 }
             },
         )
@@ -84,7 +151,7 @@ fun ChatsTopAppBar(viewmodel: ChatsViewModel) {
     LaunchedEffect(showDialog) {
         when (showDialog) {
             true -> {
-                viewmodel.getUsers()
+                screenModel.getUsers()
             }
 
             false -> Unit
@@ -95,7 +162,7 @@ fun ChatsTopAppBar(viewmodel: ChatsViewModel) {
         CreateNewChatDialog(
             users = users ?: emptyList(),
             onSelectedUser = { user ->
-                viewmodel.createNewChat(user)
+                screenModel.createNewChat(user)
                 showDialog = false
             },
             onDismissRequest = { showDialog = false })
@@ -116,10 +183,15 @@ private fun CreateNewChatDialog(
             modifier = Modifier.fillMaxSize(0.96f)
         ) {
             LazyColumn(
-                modifier = Modifier.fillMaxSize().padding(15.dp),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(15.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Top
             ) {
+                item {
+                    Text("Пользователи: ")
+                }
                 items(users) { user ->
                     UserCard(user.username) { onSelectedUser(user) }
                 }

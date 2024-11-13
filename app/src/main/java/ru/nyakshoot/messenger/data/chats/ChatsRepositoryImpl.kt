@@ -9,6 +9,7 @@ import ru.nyakshoot.messenger.data.auth.AuthRepository
 import ru.nyakshoot.messenger.data.chat.local.MessageLocalDataSource
 import ru.nyakshoot.messenger.data.chats.local.chats.ChatsLocalDataSource
 import ru.nyakshoot.messenger.data.chats.local.user.UserLocalDataSource
+import ru.nyakshoot.messenger.data.chats.remote.chats.ChatFirestore
 import ru.nyakshoot.messenger.data.chats.remote.chats.ChatsRemoteDataSource
 import ru.nyakshoot.messenger.data.chats.remote.user.UserRemoteDataSource
 import ru.nyakshoot.messenger.domain.chats.Chat
@@ -30,13 +31,13 @@ class ChatsRepositoryImpl @Inject constructor(
     override val currentChats: List<Chat>? = null
 
     override suspend fun observeChats(): Flow<List<Chat>?> = callbackFlow {
-        val localChats = chatsLocalDataSource.getUserChats()
+        val localChats = chatsLocalDataSource.getUserChats().sortedBy { it.ts }
         trySend(localChats)
 
-        val remoteChats = chatsRemoteDataSource.getUserChats(currentAuthUser?.id.orEmpty()).data
-        if (!remoteChats.isNullOrEmpty()) {
+        val remoteChats = chatsRemoteDataSource.getUserChats(currentAuthUser?.id.orEmpty()).sortedBy { it.ts }
+        if (remoteChats.isNotEmpty()) {
             launch {
-                userLocalDataSource.insertAll(remoteChats.map { it.receiverUser })
+                userLocalDataSource.insertAll(remoteChats.map { it.companion })
                 chatsLocalDataSource.insertAllChats(remoteChats)
             }
             trySend(remoteChats)
@@ -45,19 +46,22 @@ class ChatsRepositoryImpl @Inject constructor(
         chatsRemoteDataSource.observeChats(currentAuthUser?.id.orEmpty()) { updatedChats ->
             if (!updatedChats.isNullOrEmpty()) {
                 launch {
-                    userLocalDataSource.insertAll(updatedChats.map { it.receiverUser })
+                    userLocalDataSource.insertAll(updatedChats.map { it.companion })
                     chatsLocalDataSource.insertAllChats(updatedChats)
                 }
-                trySend(updatedChats)
+                trySend(updatedChats.sortedBy { it.ts })
             }
         }
 
         awaitClose { }
     }
 
-    override suspend fun deleteChat(chatId: String) {
-        chatsLocalDataSource.deleteChat(chatId)
-        chatsRemoteDataSource.deleteChat(chatId)
+    override suspend fun deleteChat(chatsId: List<String>) {
+        chatsId.forEach {  chatId ->
+            messageLocalDataSource.deleteAllFromChat(chatId)
+            chatsLocalDataSource.deleteChat(chatId)
+            chatsRemoteDataSource.deleteChat(chatId)
+        }
     }
 
     override suspend fun getUsers(): List<User> {
@@ -65,16 +69,15 @@ class ChatsRepositoryImpl @Inject constructor(
             ?: emptyList()
     }
 
-    override suspend fun createNewChat(user: User) {
-        val newChat = Chat(
+    override suspend fun createNewChat(companion: User) {
+        val newChat = ChatFirestore(
             id = UUID.randomUUID().toString(),
             ts = Timestamp.now(),
             lastMessage = null,
-            users = listOf(currentAuthUser!!.id, user.id),
-            receiverUser = user
+            users = listOf(currentAuthUser!!.id, companion.id),
         )
-        userLocalDataSource.insert(user)
-        chatsLocalDataSource.insert(newChat)
+        userLocalDataSource.insert(companion)
+        chatsLocalDataSource.insert(newChat.toEntity(companion.id))
         chatsRemoteDataSource.createNewChat(newChat)
     }
 
@@ -83,6 +86,4 @@ class ChatsRepositoryImpl @Inject constructor(
         userLocalDataSource.logOut()
         messageLocalDataSource.logOut()
     }
-
-
 }

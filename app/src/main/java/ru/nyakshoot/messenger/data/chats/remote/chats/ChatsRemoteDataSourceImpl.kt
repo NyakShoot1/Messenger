@@ -1,14 +1,17 @@
 package ru.nyakshoot.messenger.data.chats.remote.chats
 
 import android.util.Log
+import com.google.firebase.Timestamp
+import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
+import ru.nyakshoot.messenger.domain.chat.Message
 import ru.nyakshoot.messenger.domain.chats.Chat
 import ru.nyakshoot.messenger.domain.chats.User
-import ru.nyakshoot.messenger.utils.NetworkResult
 import ru.nyakshoot.messenger.utils.safeFirestoreCall
 import javax.inject.Inject
 
@@ -26,18 +29,34 @@ class ChatsRemoteDataSourceImpl @Inject constructor(
                     return@addSnapshotListener
                 }
 
-                val updatedChats = snapshots?.toObjects(Chat::class.java)
-
                 CoroutineScope(Dispatchers.IO).launch {
-                    updatedChats?.forEach { chat ->
-                        val receiverUserId = chat.users.filter { it != currentUserId }
-                        val receiverUser = getUserById(receiverUserId[receiverUserId.lastIndex])
-                        chat.receiverUser = receiverUser
-                    }
-
+                    val updatedChats =
+                        snapshots?.toObjects(ChatFirestore::class.java)?.map { chatFirestore ->
+                            val companion = getUserById(chatFirestore.getCompanionId(currentUserId))
+                            chatFirestore.toModel(companion)
+                        }
                     onUpdate(updatedChats)
                 }
             }
+    }
+
+    override suspend fun getUserChats(currentUserId: String): List<Chat> {
+        return db.collection("chats")
+            .whereArrayContains("users", currentUserId)
+            .get()
+            .await()
+            .toObjects(ChatFirestore::class.java).map { chatFirestore ->
+                val companion = getUserById(chatFirestore.getCompanionId(currentUserId))
+                chatFirestore.toModel(companion)
+            }
+    }
+
+    override suspend fun deleteChat(chatId: String) {
+        db.collection("chats").document(chatId).delete().await()
+    }
+
+    override suspend fun createNewChat(chat: ChatFirestore) {
+        db.collection("chats").document(chat.id).set(chat).await()
     }
 
     private suspend fun getUserById(userId: String): User {
@@ -49,33 +68,5 @@ class ChatsRemoteDataSourceImpl @Inject constructor(
                 .toObject(User::class.java)
         }.data ?: User()
     }
-
-    override suspend fun getUserChats(currentUserId: String): NetworkResult<List<Chat>> {
-        return safeFirestoreCall {
-            val chats = db.collection("chats")
-                .whereArrayContains("users", currentUserId)
-                .get()
-                .await()
-                .toObjects(Chat::class.java)
-
-            val updatedChats = chats.map { chat ->
-                val receiverUserId = chat.users.firstOrNull { it != currentUserId }
-                if (receiverUserId != null) {
-                    val receiverUser = getUserById(receiverUserId)
-                    chat.receiverUser = receiverUser
-                }
-                chat
-            }
-            updatedChats
-        }
-    }
-
-    override suspend fun deleteChat(chatId: String) {
-        db.collection("chats").document(chatId).delete().await()
-    }
-
-    override suspend fun createNewChat(chat: Chat) {
-        Log.d("new_chat", chat.toString())
-        db.collection("chats").document(chat.id).set(chat).await()
-    }
 }
+

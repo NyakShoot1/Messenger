@@ -11,11 +11,11 @@ interface ChatsRepository {
 
     suspend fun observeChats(): Flow<List<Chat>?>
 
-    suspend fun deleteChat(chatId: String)
+    suspend fun deleteChat(chatsId: List<String>)
 
     suspend fun getUsers(): List<User>
 
-    suspend fun createNewChat(user: User)
+    suspend fun createNewChat(companion: User)
 
     suspend fun logOut()
 

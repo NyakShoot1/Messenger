@@ -16,36 +16,38 @@ class ChatRepositoryImpl @Inject constructor(
     private val messageLocalDataSource: MessageLocalDataSource,
     private val messageRemoteDataSource: MessageRemoteDataSource,
     private val authRepository: AuthRepository
-): ChatRepository {
+) : ChatRepository {
 
     private val currentAuthUser = authRepository.currentAuthUser
 
     override val currentMessages: List<Message>? = null
 
-    override suspend fun observeMessages(chatId: String): Flow<List<Message>?>  = callbackFlow {
+    override suspend fun observeMessages(chatId: String): Flow<List<Message>?> = callbackFlow {
         val localMessages = messageLocalDataSource.getChatMessages(chatId)
         trySend(localMessages)
 
-        val remoteMessages = messageRemoteDataSource.getMessages(chatId).data
-        if (!remoteMessages.isNullOrEmpty()){
+        val remoteMessages = messageRemoteDataSource.getMessages(chatId)
+        if (!remoteMessages.isNullOrEmpty()) {
             messageLocalDataSource.insertAll(chatId, remoteMessages)
             trySend(remoteMessages)
         }
 
-        messageRemoteDataSource.observeMessages(chatId){ updateMessages ->
-            if (updateMessages != null){
+        messageRemoteDataSource.observeMessages(chatId) { updateMessages ->
+            if (updateMessages != null) {
                 launch {
                     messageLocalDataSource.insertAll(chatId, updateMessages)
                     trySend(updateMessages)
                 }
             }
         }
-        awaitClose {  }
+        awaitClose { }
     }
 
-    override suspend fun deleteMessage(chatId: String, messageId: String) {
-        messageLocalDataSource.deleteMessage(messageId)
-        messageRemoteDataSource.deleteMessage(chatId, messageId)
+    override suspend fun deleteMessage(chatId: String, messagesId: List<String>) {
+        messagesId.map { messageId ->
+            messageLocalDataSource.deleteMessage(messageId)
+            messageRemoteDataSource.deleteMessage(chatId, messageId)
+        }
     }
 
     override suspend fun createNewMessage(text: String, chatId: String) {

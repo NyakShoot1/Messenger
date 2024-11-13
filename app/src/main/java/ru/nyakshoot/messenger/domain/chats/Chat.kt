@@ -1,37 +1,38 @@
 package ru.nyakshoot.messenger.domain.chats
 
 import com.google.firebase.Timestamp
-import com.google.firebase.firestore.PropertyName
 import ru.nyakshoot.messenger.data.chats.local.chats.ChatEntity
 import ru.nyakshoot.messenger.domain.chat.Message
 
 data class Chat(
-    @get:PropertyName("id")
-    @set:PropertyName("id")
-    var id: String = "",
-
-    @get:PropertyName("ts")
-    @set:PropertyName("ts")
-    var ts: Timestamp? = null,
-
-    @get:PropertyName("last_message")
-    @set:PropertyName("last_message")
-    var lastMessage: Message? = null,
-
-    @get:PropertyName("users")
-    @set:PropertyName("users")
-    var users: List<String> = emptyList(),
-
-    @PropertyName("")
-    var receiverUser: User = User()
+    val id: String,
+    val ts: Timestamp,
+    val lastMessage: Message?,
+    val companion: User
 ) {
 
     fun toChatEntity(): ChatEntity = ChatEntity(
         id,
-        ts ?: Timestamp.now(),
+        ts,
         lastMessage?.id,
-        receiverUser.id
+        companion.id
     )
+
+    fun toMap(): Map<String, Any?> {
+        return mapOf(
+            ID to id,
+            TS to ts,
+            LAST_MESSAGE to lastMessage,
+        )
+    }
+
+    companion object PropertyNames {
+        const val ID = "id"
+        const val TS = "ts"
+        const val LAST_MESSAGE = "last_message"
+        const val USERS = "users"
+        const val COMPANION_ID = "companion_id"
+    }
 
 }
 

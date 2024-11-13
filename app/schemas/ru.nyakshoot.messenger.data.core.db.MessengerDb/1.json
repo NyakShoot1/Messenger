@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "0ca7297ef413fd063801772214e7e0e9",
+    "identityHash": "3af18f9dc0fc4b7cedcec9e89f1f3652",
     "entities": [
       {
         "tableName": "chat",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`chat_id` TEXT NOT NULL, `chat_ts` TEXT NOT NULL, `last_message_id` TEXT, `receiver_user_id` TEXT NOT NULL, PRIMARY KEY(`chat_id`), FOREIGN KEY(`last_message_id`) REFERENCES `message`(`message_id`) ON UPDATE NO ACTION ON DELETE SET NULL , FOREIGN KEY(`receiver_user_id`) REFERENCES `user`(`user_id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`chat_id` TEXT NOT NULL, `chat_ts` TEXT NOT NULL, `last_message_id` TEXT, `companion_id` TEXT NOT NULL, PRIMARY KEY(`chat_id`), FOREIGN KEY(`last_message_id`) REFERENCES `message`(`message_id`) ON UPDATE NO ACTION ON DELETE SET NULL , FOREIGN KEY(`companion_id`) REFERENCES `user`(`user_id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "id",
@@ -27,8 +27,8 @@
             "notNull": false
           },
           {
-            "fieldPath": "receiverUserId",
-            "columnName": "receiver_user_id",
+            "fieldPath": "companionId",
+            "columnName": "companion_id",
             "affinity": "TEXT",
             "notNull": true
           }
@@ -50,13 +50,13 @@
             "createSql": "CREATE INDEX IF NOT EXISTS `index_chat_last_message_id` ON `${TABLE_NAME}` (`last_message_id`)"
           },
           {
-            "name": "index_chat_receiver_user_id",
+            "name": "index_chat_companion_id",
             "unique": false,
             "columnNames": [
-              "receiver_user_id"
+              "companion_id"
             ],
             "orders": [],
-            "createSql": "CREATE INDEX IF NOT EXISTS `index_chat_receiver_user_id` ON `${TABLE_NAME}` (`receiver_user_id`)"
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_chat_companion_id` ON `${TABLE_NAME}` (`companion_id`)"
           }
         ],
         "foreignKeys": [
@@ -76,7 +76,7 @@
             "onDelete": "CASCADE",
             "onUpdate": "NO ACTION",
             "columns": [
-              "receiver_user_id"
+              "companion_id"
             ],
             "referencedColumns": [
               "user_id"
@@ -171,7 +171,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '0ca7297ef413fd063801772214e7e0e9')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '3af18f9dc0fc4b7cedcec9e89f1f3652')"
     ]
   }
 }

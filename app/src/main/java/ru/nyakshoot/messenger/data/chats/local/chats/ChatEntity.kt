@@ -20,12 +20,12 @@ import ru.nyakshoot.messenger.data.chats.local.user.UserEntity
     ), ForeignKey(
         entity = UserEntity::class,
         parentColumns = ["user_id"],
-        childColumns = ["receiver_user_id"],
+        childColumns = ["companion_id"],
         onDelete = ForeignKey.CASCADE
     )],
     indices = [
         Index("last_message_id"),
-        Index("receiver_user_id"),
+        Index("companion_id"),
     ]
 )
 data class ChatEntity(
@@ -40,6 +40,6 @@ data class ChatEntity(
     @ColumnInfo(name = "last_message_id")
     val lastMessageId: String?,
 
-    @ColumnInfo(name = "receiver_user_id")
-    val receiverUserId: String
+    @ColumnInfo(name = "companion_id")
+    val companionId: String
 )

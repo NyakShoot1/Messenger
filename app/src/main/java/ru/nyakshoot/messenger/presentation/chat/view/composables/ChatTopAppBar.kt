@@ -10,19 +10,21 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontWeight
+import cafe.adriel.voyager.hilt.getNavigatorScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import ru.nyakshoot.messenger.presentation.chat.viewmodel.ChatScreenModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ChatTopAppBar(screenModel: ChatScreenModel) {
+fun ChatTopAppBar() {
 
     val navigator = LocalNavigator.currentOrThrow
+    val screenModel = navigator.getNavigatorScreenModel<ChatScreenModel>()
 
     TopAppBar(
         title = { Text(
-            screenModel.chat.receiverUser.username,
+            screenModel.chat.companion.username,
             style = MaterialTheme.typography.bodyLarge,
             fontWeight = FontWeight.Bold
         ) },

@@ -15,6 +15,8 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreSettings
 import dagger.hilt.android.AndroidEntryPoint
 import ru.nyakshoot.messenger.core.navigation.TopAppBarForCurrentScreen
+import ru.nyakshoot.messenger.presentation.chat.view.ChatScreen
+import ru.nyakshoot.messenger.presentation.chats.view.ChatsScreen
 import ru.nyakshoot.messenger.presentation.splash.view.SplashScreen
 import ru.nyakshoot.messenger.ui.theme.MessengerTheme
 

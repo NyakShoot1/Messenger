@@ -31,10 +31,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import cafe.adriel.voyager.core.model.rememberNavigatorScreenModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
 import cafe.adriel.voyager.core.screen.uniqueScreenKey
 import cafe.adriel.voyager.hilt.getScreenModel
+import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.currentOrThrow
 import ru.nyakshoot.messenger.domain.chats.Chat
 import ru.nyakshoot.messenger.presentation.chat.view.composables.DateDivider
 import ru.nyakshoot.messenger.presentation.chat.view.composables.MessageCard
@@ -50,9 +53,13 @@ class ChatScreen(
     @Composable
     override fun Content() {
 
+        val navigator = LocalNavigator.currentOrThrow
+
         val screenModel = getScreenModel<ChatScreenModel, ChatScreenModel.Factory> { factory ->
             factory.create(chat)
         }
+
+        navigator.rememberNavigatorScreenModel { screenModel }
 
         val messages by screenModel.messagesFlow.collectAsState()
         val chatState by screenModel.chatState.observeAsState()
@@ -99,7 +106,7 @@ class ChatScreen(
                                         DateDivider(date = date)
                                     }
                                     items(messagesForDate) { message ->
-                                        MessageCard(message, currentUser!!.id)
+                                        MessageCard(message, currentUser!!.id, false){}
                                     }
                                 }
                             }

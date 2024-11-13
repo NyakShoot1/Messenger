@@ -17,6 +17,7 @@ import ru.nyakshoot.messenger.data.auth.AuthRepository
 import ru.nyakshoot.messenger.data.chat.ChatRepository
 import ru.nyakshoot.messenger.domain.chat.Message
 import ru.nyakshoot.messenger.domain.chats.Chat
+import ru.nyakshoot.messenger.presentation.chats.viewmodel.ChatsState
 
 
 class ChatScreenModel @AssistedInject constructor(
@@ -37,6 +38,10 @@ class ChatScreenModel @AssistedInject constructor(
     val chatState: LiveData<ChatState> get() = _chatState
 
     val currentAuthUser = authRepository.currentAuthUser
+
+    private val _selectedMessages = MutableStateFlow<List<Message>>(listOf())
+    val selectedMessages: StateFlow<List<Message>> = _selectedMessages
+
 
     init {
         observeMessages()
@@ -70,7 +75,39 @@ class ChatScreenModel @AssistedInject constructor(
         }
     }
 
+    fun deleteChats() = screenModelScope.launch {
+        chatRepository.deleteMessage(chat.id, _selectedMessages.value)
+        _selectedMessages.value = emptyList()
+        _chatState.value = ChatState.MessagesLoaded
+    }
+
+    fun isSelected(message: Message): Boolean {
+        return _selectedMessages.value.contains(message)
+    }
+
+    fun selectMessage(message: Message) {
+        val currentSelected = _selectedMessages.value.toMutableList()
+        if (currentSelected.contains(message)) {
+            currentSelected.remove(message)
+        } else {
+            currentSelected.add(message)
+        }
+        _selectedMessages.value = currentSelected
+
+        _chatState.value = if (currentSelected.isEmpty()) {
+            ChatState.MessagesSelected
+        } else {
+            ChatState.MessagesLoaded
+        }
+    }
+
+    fun resetSelection() {
+        _selectedMessages.value = emptyList()
+        _chatState.value = ChatState.MessagesLoaded
+    }
+
+
     fun readMessages() = screenModelScope.launch {
-        chatRepository.readMessages(chat.id, chat.receiverUser.id)
+        chatRepository.readMessages(chat.id, chat.companion.id)
     }
 }
